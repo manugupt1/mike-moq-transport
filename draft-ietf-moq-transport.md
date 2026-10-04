@@ -2505,22 +2505,24 @@ register an Alias which is already registered MUST close the Session with
 that is not currently registered MUST reject the message with
 `UNKNOWN_AUTH_TOKEN_ALIAS`.
 
-The receiver of a message containing a well-formed Token structure that is
-otherwise invalid MUST reject that message with an `MALFORMED_AUTH_TOKEN`
-error.
+If the Token structure is well-formed, but the receiver recognizes the Token
+Type and determines that the Token Value has invalid serialization, it MUST
+reject the message with a `MALFORMED_AUTH_TOKEN` error. The receiver evaluates
+tokens for authorization as specified in {{sec-tokens}}.
 
 The receiver of a message carrying an Authorization Token with Alias Type
 REGISTER that does not result in a Session error MUST register the Token Alias
-in the token cache, even if the message fails for other reasons, including
-`Unauthorized`.  This allows senders to pipeline messages that refer to
-previously registered tokens without potentially terminating the entire Session.
-A receiver MAY store an error code (eg: `UNAUTHORIZED` or
-`MALFORMED_AUTH_TOKEN`) in place of the Token Type and Token Alias if any future
-message referencing the Token Alias will result in that error. However, it is
-important to not store an error code for a token that might be valid in the
-future or due to some other property becoming fulfilled which currently
-isn't. The size of a registered cache entry includes the length of the Token
-Value, regardless of whether it is stored.
+in the token cache, even if the token is ignored for authorization or the
+message fails for other reasons, including `UNAUTHORIZED`. This allows senders
+to pipeline messages that refer to previously registered tokens without
+potentially terminating the entire Session.
+A receiver MAY store a token error in place of the Token Type and Token Value
+only if that error applies to every future use of the Token Alias.
+The receiver MUST NOT store such a result if it can change with time, the
+requested action or resource, or other conditions. Cached results apply to
+individual tokens. Authorization decisions follow {{sec-tokens}}. The size of
+a registered cache entry includes the length of the Token Value, regardless of
+whether it is stored.
 
 If a receiver detects that an authorization token has expired, it MUST retain
 the registered Alias until it is deleted by the sender, though it MAY discard
@@ -5311,6 +5313,7 @@ identity.
 Once a peer is authenticated, an application MAY use attributes in the peer's
 certificate as an input to authorization decisions; the granularity and policy
 of such authorization is out of scope for this document.
+
 ### Authorization Tokens {#sec-tokens}
 
 MOQT has functionality to carry Authorization tokens as message
@@ -5321,10 +5324,26 @@ current tokens are Privacy Pass Authentication for Media over QUIC
 {{PPA}} and Authentication scheme for MOQT using Common Access Tokens
 {{CAT}}.
 
-Tokens are expected to contain information about which actions and
-which resources the endpoint providing the token is authorized to
-perform and access. Relays will verify the
-token to ensure that the request is authorized.
+Tokens are evaluated by each relay, hop by hop. Tokens are expected to contain
+information about which actions and resources the endpoint providing the token
+is authorized to perform and access. Each relay verifies the tokens it receives.
+
+For any operation requiring token-based that require token-based authorization,
+each token is evaluated independently. The token requirement is satisfied if at 
+least one token authorizes both the requested action and access to the requested 
+resource. Otherwise, the receiver MUST reject the request. A token scheme MUST evaluate
+any requirements that must be satisfied together within an individual token.
+
+The receiver MUST ignore a token for authorization if it does not support the
+Token Type, if the token is intended for another receiver, or if it cannot
+decrypt or verify the token. These conditions MUST NOT, by themselves, cause
+`MALFORMED_AUTH_TOKEN` or rejection of the message. A cached authorization
+failure for one token does not prevent another token from authorizing the
+request.
+
+The token-processing rules in {{auth-token-compression}} still apply. The
+receiver MUST reject a message or close the Session when those rules require
+it, even if another token authorizes the request.
 
 ### Replay Attacks
 
