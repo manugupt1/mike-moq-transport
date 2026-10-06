@@ -5311,6 +5311,7 @@ identity.
 Once a peer is authenticated, an application MAY use attributes in the peer's
 certificate as an input to authorization decisions; the granularity and policy
 of such authorization is out of scope for this document.
+
 ### Authorization Tokens {#sec-tokens}
 
 MOQT has functionality to carry Authorization tokens as message
@@ -5321,10 +5322,48 @@ current tokens are Privacy Pass Authentication for Media over QUIC
 {{PPA}} and Authentication scheme for MOQT using Common Access Tokens
 {{CAT}}.
 
-Tokens are expected to contain information about which actions and
-which resources the endpoint providing the token is authorized to
-perform and access. Relays will verify the
-token to ensure that the request is authorized.
+Application policies can be encoded within authorization tokens, including
+permitted actions, resource access, time, IP, and geographic restrictions,
+and re-evaluation intervals. Relays validate tokens and enforce the encoded
+policies according to the rules defined by the applicable token
+specification, such as {{CAT}}.
+
+### Authorization Re-evaluation
+
+Re-evaluation requirements depend on the applicable authorization scheme
+and application policy.
+
+A relay MUST reject a request or request update if authorization fails under
+the applicable authorization scheme and application policy.
+
+If continued access requires valid authorization, the relay MUST terminate
+the affected subscription when authorization expires without renewal or
+re-evaluation fails, using PUBLISH_DONE or request cancellation as specified
+in {{expires}}.
+
+#### Authorization Tokens
+
+A relay can use the EXPIRES parameter ({{expires}}) to indicate when it
+expects to terminate a subscription. This parameter is advisory; it does not
+determine token expiration or permit access beyond the authorization validity
+period.
+
+If continued access requires renewed token-based authorization, the endpoint
+SHOULD obtain updated authorization tokens before the current authorization
+expires or otherwise fails under the applicable authorization scheme and
+application policy.
+The receiver can request an extension with REQUEST_UPDATE for the existing
+request and SHOULD include any updated authorization tokens in
+AUTHORIZATION_TOKEN parameters. See {{message-request-update}} for responses
+and {{updating-subscriptions}} for failure handling.
+
+#### Mutual TLS
+
+For mTLS, application policy determines whether certificate expiration after the TLS
+handshake requires termination of existing access. To authenticate with a
+replacement certificate, the endpoint establishes a new connection and performs
+a full TLS handshake that authenticates that certificate. QUIC does not permit
+post-handshake client authentication ({{Section 4.4 of ?RFC9001}}).
 
 ### Replay Attacks
 
