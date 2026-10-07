@@ -2733,7 +2733,7 @@ initiation.
 The AUTHORIZATION TOKEN Setup Option (Option Type 0x03) is functionally
 equivalent to the AUTHORIZATION TOKEN message parameter, see {{authorization-token}}.
 The endpoint can specify one or more tokens in SETUP
-that the peer can use to authorize MOQT session establishment.
+that the peer can use to authorize MOQT session establishment or renewal.
 
 The option value is a Token structure, whose wire format and semantics are
 defined in {{auth-token-compression}}.
@@ -4919,7 +4919,7 @@ INTERNAL_ERROR (0x1):
 : An implementation specific error occurred.
 
 UNAUTHORIZED (0x2):
-: The client is not authorized to establish a session.
+: The client is not authorized to establish or continue a session.
 
 PROTOCOL_VIOLATION (0x3):
 : The remote endpoint performed an action that was disallowed by the
@@ -5356,6 +5356,20 @@ The receiver can request an extension with REQUEST_UPDATE for the existing
 request and SHOULD include any updated authorization tokens in
 AUTHORIZATION_TOKEN parameters. See {{message-request-update}} for responses
 and {{updating-subscriptions}} for failure handling.
+
+To renew authorization for an existing session, an endpoint MUST send another
+SETUP message on its existing control stream with an updated AUTHORIZATION TOKEN
+Setup Option. Setup Options omitted from this SETUP retain their established
+values, including defaults. The set of negotiated extensions MUST remain unchanged.
+For each recognized Setup Option other than AUTHORIZATION TOKEN in the renewal,
+the receiver MUST compare its value with the established value, including a
+default value if the option was omitted from the initial SETUP. If the option has
+no established value or default, or its value differs from the established
+value, the receiver MUST terminate the session with `PROTOCOL_VIOLATION`.
+The receiver MUST apply the validation and session termination rules for the
+initial SETUP in all other cases, including the exceptions for AUTHORIZATION
+TOKEN registration that exceeds MAX_AUTH_TOKEN_CACHE_SIZE. The receiver MUST
+ignore unknown Setup Options.
 
 #### Mutual TLS
 
