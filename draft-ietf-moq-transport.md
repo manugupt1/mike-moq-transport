@@ -5333,8 +5333,9 @@ specification, such as {{CAT}}.
 Re-evaluation requirements depend on the applicable authorization scheme
 and application policy.
 
-A relay MUST reject a request or request update if authorization fails under
-the applicable authorization scheme and application policy.
+A relay or the original publisher MUST reject a request or request update if
+authorization fails under the applicable authorization scheme and application
+policy.
 
 If continued access requires valid authorization, the relay MUST terminate
 the affected subscription when authorization expires without renewal or
@@ -5352,6 +5353,7 @@ If continued access requires renewed token-based authorization, the endpoint
 SHOULD obtain updated authorization tokens before the current authorization
 expires or otherwise fails under the applicable authorization scheme and
 application policy.
+
 The receiver can request an extension with REQUEST_UPDATE for the existing
 request and SHOULD include any updated authorization tokens in
 AUTHORIZATION_TOKEN parameters. See {{message-request-update}} for responses
@@ -5370,6 +5372,11 @@ The receiver MUST apply the validation and session termination rules for the
 initial SETUP in all other cases, including the exceptions for AUTHORIZATION
 TOKEN registration that exceeds MAX_AUTH_TOKEN_CACHE_SIZE. The receiver MUST
 ignore unknown Setup Options.
+
+An endpoint MAY send an authorization expiry notice in AUTHORIZATION_DATA.
+The absence of an expiry notice does not extend authorization validity.
+
+TBD: Define the AUTHORIZATION_DATA payload format and authorization stream use.
 
 #### Mutual TLS
 
