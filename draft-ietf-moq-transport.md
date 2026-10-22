@@ -1200,7 +1200,7 @@ namespace that falls within an active SUBSCRIBE_NAMESPACE prefix. This
 occurs when SUBSCRIBE_NAMESPACE or its response is in flight at the same time
 as a PUBLISH_NAMESPACE, or when an original publisher sends PUBLISH_NAMESPACE
 to advertise namespaces within the prefix being discovered. Such a
-PUBLISH_NAMESPACE is valid and MAY carry an AUTHORIZATION TOKEN parameter.
+PUBLISH_NAMESPACE is valid and MAY carry an AUTHORIZATION_DATA parameter.
 Its lifetime is independent of the SUBSCRIBE_NAMESPACE stream.
 
 An endpoint SHOULD report the reception of a PUBLISH_NAMESPACE_OK or
@@ -2443,9 +2443,8 @@ example.2enet-team2-project_x--report
 
 ## Authorization Token Compression {#auth-token-compression}
 
-Authorization tokens are carried in the AUTHORIZATION TOKEN message parameter
-(see {{authorization-token}}) and the AUTHORIZATION TOKEN Setup Option (see
-{{setup-auth-token}}).  Both use the wire format and semantics defined in this
+The AUTHORIZATION_TOKEN Setup Option (see {{setup-auth-token}}) carries
+an authorization token. Its wire format and semantics are defined in this
 section.
 
 The value is a Token structure containing an optional Session-specific
@@ -2728,11 +2727,10 @@ for all registered tokens (Alias Type value of 0x01) minus the sum of the token
 sizes for all deregistered tokens (Alias Type value of 0x00), since Session
 initiation.
 
-### AUTHORIZATION TOKEN {#setup-auth-token}
+### AUTHORIZATION_TOKEN {#setup-auth-token}
 
-The AUTHORIZATION TOKEN Setup Option (Option Type 0x03) is functionally
-equivalent to the AUTHORIZATION TOKEN message parameter, see {{authorization-token}}.
-The endpoint can specify one or more tokens in SETUP
+The AUTHORIZATION_TOKEN Setup Option (Option Type 0x03) allows an endpoint
+to specify one or more tokens in SETUP
 that the peer can use to authorize MOQT session establishment.
 
 The option value is a Token structure, whose wire format and semantics are
@@ -2741,7 +2739,7 @@ defined in {{auth-token-compression}}.
 If a server receives Alias Type DELETE (0x0) or USE_ALIAS (0x2) in a SETUP
 message, it MUST close the session with a `PROTOCOL_VIOLATION`.
 
-If an endpoint receives an AUTHORIZATION TOKEN option in SETUP with Alias
+If an endpoint receives an AUTHORIZATION_TOKEN option in SETUP with Alias
 Type REGISTER that exceeds its MAX_AUTH_TOKEN_CACHE_SIZE, it MUST NOT fail
 the session with `AUTH_TOKEN_CACHE_OVERFLOW`.  Instead, it MUST treat the
 option as Alias Type USE_VALUE.  Since each endpoint's SETUP may be sent before
@@ -3007,14 +3005,14 @@ REQUEST_UPDATE Message {
 * Parameters: The parameters are defined in {{message-params}}.  The
   parameters that can appear depend on the request being updated:
 
-  * Subscription: OBJECT_DELIVERY_TIMEOUT, AUTHORIZATION_TOKEN,
+  * Subscription: OBJECT_DELIVERY_TIMEOUT, AUTHORIZATION_DATA,
     SUBGROUP_DELIVERY_TIMEOUT, FORWARD, SUBSCRIBER_PRIORITY, LOCATION_FILTER,
     FILL_PARAMETERS, SUBGROUP_FILTER, OBJECTID_FILTER, PRIORITY_FILTER,
     OBJECT_PROPERTY_FILTER, NEW_GROUP_REQUEST
-  * FETCH: AUTHORIZATION_TOKEN, SUBSCRIBER_PRIORITY
-  * PUBLISH_NAMESPACE: AUTHORIZATION_TOKEN
-  * SUBSCRIBE_NAMESPACE: AUTHORIZATION_TOKEN, TRACK_NAMESPACE_PREFIX
-  * SUBSCRIBE_TRACKS: AUTHORIZATION_TOKEN, FORWARD, TRACK_PROPERTY_FILTER,
+  * FETCH: AUTHORIZATION_DATA, SUBSCRIBER_PRIORITY
+  * PUBLISH_NAMESPACE: AUTHORIZATION_DATA
+  * SUBSCRIBE_NAMESPACE: AUTHORIZATION_DATA, TRACK_NAMESPACE_PREFIX
+  * SUBSCRIBE_TRACKS: AUTHORIZATION_DATA, FORWARD, TRACK_PROPERTY_FILTER,
     TRACK_NAMESPACE_PREFIX
 
   Range Filters are only allowed from the subscriber (see {{range-filters}}).
@@ -3104,7 +3102,7 @@ SUBSCRIBE Message {
 
 * Parameters: The parameters are defined in {{message-params}}.  The parameters
   that can appear in a SUBSCRIBE are OBJECT_DELIVERY_TIMEOUT,
-  AUTHORIZATION_TOKEN, RENDEZVOUS_TIMEOUT, SUBGROUP_DELIVERY_TIMEOUT, FORWARD,
+  AUTHORIZATION_DATA, RENDEZVOUS_TIMEOUT, SUBGROUP_DELIVERY_TIMEOUT, FORWARD,
   SUBSCRIBER_PRIORITY, LOCATION_FILTER, GROUP_ORDER, FILL_PARAMETERS,
   SUBGROUP_FILTER, OBJECTID_FILTER, PRIORITY_FILTER, OBJECT_PROPERTY_FILTER,
   NEW_GROUP_REQUEST and INCLUDE_PROPERTIES.
@@ -3172,7 +3170,7 @@ PUBLISH Message {
 
 * Parameters: The parameters are defined in {{message-params}}. The parameters
   that can appear in a PUBLISH are OBJECT_DELIVERY_TIMEOUT,
-  AUTHORIZATION_TOKEN, SUBGROUP_DELIVERY_TIMEOUT, EXPIRES, LARGEST_OBJECT,
+  AUTHORIZATION_DATA, SUBGROUP_DELIVERY_TIMEOUT, EXPIRES, LARGEST_OBJECT,
   FORWARD, SUBSCRIBER_PRIORITY, LOCATION_FILTER and GROUP_ORDER.  Those
   governing delivery, such as FORWARD, GROUP_ORDER, SUBSCRIBER_PRIORITY,
   SUBGROUP_DELIVERY_TIMEOUT, OBJECT_DELIVERY_TIMEOUT and LOCATION_FILTER,
@@ -3342,7 +3340,7 @@ FETCH Message {
 * Track Name: Identifies the track name as defined in ({{track-name}}).
 
 * Parameters: The parameters are defined in {{message-params}}.  The parameters
-  that can appear in a FETCH are AUTHORIZATION_TOKEN, FILL_TIMEOUT,
+  that can appear in a FETCH are AUTHORIZATION_DATA, FILL_TIMEOUT,
   SUBSCRIBER_PRIORITY, LOCATION_FILTER, GROUP_ORDER, SUBGROUP_FILTER,
   OBJECTID_FILTER, PRIORITY_FILTER, OBJECT_PROPERTY_FILTER and
   INCLUDE_PROPERTIES.
@@ -3389,7 +3387,7 @@ new bidi stream to obtain information about the current status of a given track.
 The TRACK_STATUS message format is identical to the SUBSCRIBE message
 ({{message-subscribe-req}}), but subscriber parameters related to Track
 delivery (e.g. SUBSCRIBER_PRIORITY) are not included.  The parameters that can
-appear in a TRACK_STATUS are AUTHORIZATION_TOKEN and INCLUDE_PROPERTIES.
+appear in a TRACK_STATUS are AUTHORIZATION_DATA and INCLUDE_PROPERTIES.
 
 The receiver of a TRACK_STATUS message treats it identically as if it had
 received a SUBSCRIBE message, except it does not create downstream subscription
@@ -3432,7 +3430,7 @@ PUBLISH_NAMESPACE Message {
   {{namespace-prefix-matching}}).
 
 * Parameters: The parameters are defined in {{message-params}}.  The only
-  parameter that can appear in a PUBLISH_NAMESPACE is AUTHORIZATION_TOKEN.
+  parameter that can appear in a PUBLISH_NAMESPACE is AUTHORIZATION_DATA.
 
 ## SUBSCRIBE_NAMESPACE {#message-subscribe-ns}
 
@@ -3463,7 +3461,7 @@ SUBSCRIBE_NAMESPACE Message {
   match both.
 
 * Parameters: The parameters are defined in {{message-params}}.  The only
-  parameter that can appear in a SUBSCRIBE_NAMESPACE is AUTHORIZATION_TOKEN.
+  parameter that can appear in a SUBSCRIBE_NAMESPACE is AUTHORIZATION_DATA.
 
 The publisher will respond with SUBSCRIBE_NAMESPACE_OK or
 SUBSCRIBE_NAMESPACE_ERROR on the response half of the stream. If the subscriber
@@ -3570,7 +3568,7 @@ SUBSCRIBE_TRACKS Message {
 * Parameters: The parameters are defined in {{message-params}}, though they
   are handled differently from the same Parameters on Subscriptions, as outlined
   below.  The parameters that can appear in a SUBSCRIBE_TRACKS are
-  AUTHORIZATION_TOKEN, FORWARD, GROUP_ORDER, SUBGROUP_FILTER, OBJECTID_FILTER,
+  AUTHORIZATION_DATA, FORWARD, GROUP_ORDER, SUBGROUP_FILTER, OBJECTID_FILTER,
   PRIORITY_FILTER, OBJECT_PROPERTY_FILTER, TRACK_PROPERTY_FILTER and
   INCLUDE_PROPERTIES.
 
@@ -3702,17 +3700,17 @@ endpoint MUST close the connection with a `PROTOCOL_VIOLATION`.
 Note that since Setup Options use a separate namespace, it is impossible for
 Message Parameters to appear in Setup messages.
 
-### AUTHORIZATION TOKEN Parameter {#authorization-token}
+### AUTHORIZATION_DATA Parameter {#authorization-data}
 
-The AUTHORIZATION TOKEN parameter (Parameter Type 0x03) uses Length-prefixed
+The AUTHORIZATION_DATA parameter (Parameter Type 0x03) uses Length-prefixed
 encoding. It MAY appear in a PUBLISH, SUBSCRIBE, REQUEST_UPDATE,
 SUBSCRIBE_NAMESPACE, SUBSCRIBE_TRACKS, PUBLISH_NAMESPACE, TRACK_STATUS or FETCH message. This
 parameter conveys information to authorize the sender to perform the operation
 carrying the parameter. This Parameter MUST NOT be copied from a SUBSCRIBE_TRACKS
 to the resulting PUBLISH message Parameters.
 
-The parameter value is a Token structure, whose wire format and semantics are
-defined in {{auth-token-compression}}.
+The parameter value is the authorization data defined in
+{{message-authorization-data}}.
 
 ### SUBGROUP_DELIVERY_TIMEOUT Parameter {#subgroup-delivery-timeout}
 
@@ -4017,10 +4015,10 @@ or by cancelling the request (see {{request-cancellation}}).  This value is advi
 can terminate the subscription prior to or after the expiry time.
 
 The receiver of the parameter can attempt to extend the subscription by sending
-a REQUEST_UPDATE with 0 or more updated parameters. If the receiver has one or
-more updated AUTHORIZATION_TOKENs, it SHOULD include those in the
-REQUEST_UPDATE. If the extension is granted, the sender includes a new EXPIRES
-value in REQUEST_UPDATE_OK. Relays that send this parameter and applications that
+a REQUEST_UPDATE with 0 or more updated parameters. If the receiver has
+updated authorization data, it SHOULD include that data in AUTHORIZATION_DATA
+parameters in the REQUEST_UPDATE. If the extension is granted, the sender includes
+a new EXPIRES value in REQUEST_UPDATE_OK. Relays that send this parameter and applications that
 receive it MAY introduce jitter to prevent many endpoints from updating
 simultaneously.
 
@@ -5262,7 +5260,7 @@ unless it is end-to-end encrypted {{sec-media}}.
 
 Publishers, including Relays, require authorization to prevent unauthorized
 subscriptions to content. Subscription requests can carry
-authorization tokens (see {{sec-authorization}}) to prove the
+AUTHORIZATION_DATA parameters (see {{authorization-data}}) to prove the
 subscriber's right to access specific tracks or namespaces. Relays
 that aggregate subscriptions from multiple downstream subscribers MUST
 ensure each subscriber is independently authorized.
@@ -5313,8 +5311,8 @@ certificate as an input to authorization decisions; the granularity and policy
 of such authorization is out of scope for this document.
 ### Authorization Tokens {#sec-tokens}
 
-MOQT has functionality to carry Authorization tokens as message
-parameters. These tokens can vary based on the application
+MOQT carries request authorization data in AUTHORIZATION_DATA parameters
+(see {{authorization-data}}). Authorization tokens can vary based on the application
 requirements. Two variants of authorization tokens have already
 been defined for MOQT, and more are expected in the future. The
 current tokens are Privacy Pass Authentication for Media over QUIC
@@ -5625,7 +5623,7 @@ Setup Options SHOULD request a provisional registration.
 | Parameter Type | Parameter Name | Specification |
 |----------------|----------------|---------------|
 | 0x02 | OBJECT_DELIVERY_TIMEOUT | {{object-delivery-timeout}} |
-| 0x03 | AUTHORIZATION_TOKEN | {{authorization-token}} |
+| 0x03 | AUTHORIZATION_DATA | {{authorization-data}} |
 | 0x04 | RENDEZVOUS_TIMEOUT | {{rendezvous-timeout}} |
 | 0x06 | SUBGROUP_DELIVERY_TIMEOUT | {{subgroup-delivery-timeout}} |
 | 0x08 | EXPIRES | {{expires}} |
