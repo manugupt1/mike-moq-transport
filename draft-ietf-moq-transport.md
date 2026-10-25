@@ -2443,9 +2443,7 @@ example.2enet-team2-project_x--report
 
 ## Authorization Token Compression {#auth-token-compression}
 
-The AUTHORIZATION_TOKEN Setup Option (see {{setup-auth-token}}) carries
-an authorization token. Its wire format and semantics are defined in this
-section.
+This section defines the Token structure and the rules for token Aliases.
 
 The value is a Token structure containing an optional Session-specific
 Alias. The Alias allows the sender to reference a previously transmitted Token
@@ -2541,10 +2539,9 @@ By registering a Token, the sender is requiring the receiver to store the Token
 Alias and Token Value until they are deleted, or the Session ends. The receiver
 can protect its resources by sending a Setup Option defining the
 MAX_AUTH_TOKEN_CACHE_SIZE limit (see {{max-auth-token-cache-size}}) it is
-willing to accept. If a registration outside of SETUP is attempted that would
-cause this limit to be exceeded, the receiver MUST terminate the Session with
-an `AUTH_TOKEN_CACHE_OVERFLOW` error.  Registrations in SETUP are handled as
-described in {{setup-auth-token}}.
+willing to accept. If a registration is attempted that would cause this limit
+to be exceeded, the receiver MUST terminate the Session with an
+`AUTH_TOKEN_CACHE_OVERFLOW` error.
 
 An Authorization Token MAY be repeated within a message as long as the
 combination of Token Type and Token Value are unique after resolving any
@@ -2727,25 +2724,14 @@ for all registered tokens (Alias Type value of 0x01) minus the sum of the token
 sizes for all deregistered tokens (Alias Type value of 0x00), since Session
 initiation.
 
-### AUTHORIZATION_TOKEN {#setup-auth-token}
+### AUTHORIZATION_DATA {#setup-auth-data}
 
-The AUTHORIZATION_TOKEN Setup Option (Option Type 0x03) allows an endpoint
-to specify one or more tokens in SETUP
-that the peer can use to authorize MOQT session establishment.
+The AUTHORIZATION_DATA Setup Option (Option Type 0x03) allows an endpoint
+to provide authorization data in SETUP. The peer can use this data to authorize
+MOQT session establishment.
 
-The option value is a Token structure, whose wire format and semantics are
-defined in {{auth-token-compression}}.
-
-If a server receives Alias Type DELETE (0x0) or USE_ALIAS (0x2) in a SETUP
-message, it MUST close the session with a `PROTOCOL_VIOLATION`.
-
-If an endpoint receives an AUTHORIZATION_TOKEN option in SETUP with Alias
-Type REGISTER that exceeds its MAX_AUTH_TOKEN_CACHE_SIZE, it MUST NOT fail
-the session with `AUTH_TOKEN_CACHE_OVERFLOW`.  Instead, it MUST treat the
-option as Alias Type USE_VALUE.  Since each endpoint's SETUP may be sent before
-the peer's SETUP is received, the sender MUST handle registration failures
-of this kind by purging any Token Aliases that failed to register based on the
-peer's MAX_AUTH_TOKEN_CACHE_SIZE option in SETUP (or the default value of 0).
+The option value is the authorization data defined in
+{{message-authorization-data}}.
 
 ### MOQT IMPLEMENTATION {#moqt-implementation}
 
@@ -5584,7 +5570,7 @@ This registry is initially empty.
 | Type | Name | Specification |
 |-----:|:-----|:--------------|
 | 0x01 | PATH | {{path}} |
-| 0x03 | AUTHORIZATION_TOKEN | {{setup-auth-token}} |
+| 0x03 | AUTHORIZATION_DATA | {{setup-auth-data}} |
 | 0x04 | MAX_AUTH_TOKEN_CACHE_SIZE | {{max-auth-token-cache-size}} |
 | 0x05 | AUTHORITY | {{authority}} |
 | 0x06 | MAX_FILTER_RANGES | {{max-filter-ranges}} |
